@@ -51,6 +51,7 @@ export enum FLAGS {
   TRAILING = 1 << 7,
   LENIENT = 1 << 8,
   TRANSFER_ENCODING = 1 << 9,
+  KEEP_ALIVE_TIMEOUT = 1 << 10,
 }
 
 export enum METHODS {
@@ -217,11 +218,13 @@ export enum HEADER_STATE {
   CONNECTION_CLOSE,
   CONNECTION_UPGRADE,
   TRANSFER_ENCODING_CHUNKED,
+  KEEP_ALIVE,
 }
 
 export const SPECIAL_HEADERS = {
   'connection': HEADER_STATE.CONNECTION,
   'content-length': HEADER_STATE.CONTENT_LENGTH,
+  'keep-alive': HEADER_STATE.KEEP_ALIVE,
   'proxy-connection': HEADER_STATE.CONNECTION,
   'transfer-encoding': HEADER_STATE.TRANSFER_ENCODING,
   'upgrade': HEADER_STATE.UPGRADE,

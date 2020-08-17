@@ -65,6 +65,10 @@ const NODES: ReadonlyArray<string> = [
   'header_value_connection',
   'header_value_connection_ws',
   'header_value_connection_token',
+  'header_value_keep_alive',
+  'header_value_keep_alive_token',
+  'header_value_keep_alive_timeout',
+  'header_value_keep_alive_timeout_ws',
   'header_value_almost_done',
 
   'headers_almost_done',
@@ -184,6 +188,7 @@ export class HTTP {
     p.property('i8', 'upgrade');
     p.property('i16', 'status_code');
     p.property('i8', 'finish');
+    p.property('i64', 'keep_alive_timeout');
 
     // Verify defaults
     assert.strictEqual(FINISH.SAFE, 0);
@@ -420,6 +425,7 @@ export class HTTP {
           FLAGS.TRANSFER_ENCODING, 'header_value_te_chunked'),
         [HEADER_STATE.CONTENT_LENGTH]: n('header_value_content_length_once'),
         [HEADER_STATE.CONNECTION]: n('header_value_connection'),
+        [HEADER_STATE.KEEP_ALIVE]: n('header_value_keep_alive'),
       }, 'header_value'));
 
     //
@@ -516,6 +522,40 @@ export class HTTP {
       .match(CONNECTION_TOKEN_CHARS,
         n('header_value_connection_token'))
       .otherwise(n('header_value_otherwise'));
+
+    //
+    // Keep-Alive header
+    //
+
+    n('header_value_keep_alive')
+      .transform(p.transform.toLowerUnsafe())
+      // Skip lws
+      .match([ ' ', '\t' ], n('header_value_keep_alive'))
+      .match('timeout=', n('header_value_keep_alive_timeout'))
+      .otherwise(n('header_value_keep_alive_token'));
+
+    n('header_value_keep_alive_token')
+      .match(',', this.testFlags(FLAGS.KEEP_ALIVE_TIMEOUT, {
+        // Parse only first timeout=...
+        1: n('header_value_keep_alive_token'),
+      }, n('header_value_keep_alive')))
+      .match(CONNECTION_TOKEN_CHARS, n('header_value_keep_alive_token'))
+      .otherwise(n('header_value_otherwise'));
+
+    const invalidTimeout =
+      this.update('keep_alive_timeout', 0, 'header_value');
+
+    n('header_value_keep_alive_timeout')
+      .select(NUM_MAP, this.mulAdd('keep_alive_timeout', {
+        overflow: invalidTimeout,
+        success: 'header_value_keep_alive_timeout',
+      }, { base: 10, signed: false }))
+      .otherwise(n('header_value_keep_alive_timeout_ws'));
+
+    n('header_value_keep_alive_timeout_ws')
+      .peek([ ' ', '\t', ',', '\r', '\n' ],
+        this.setFlag(FLAGS.KEEP_ALIVE_TIMEOUT, 'header_value_keep_alive'))
+      .otherwise(invalidTimeout);
 
     // Split for performance reasons
     n('header_value')

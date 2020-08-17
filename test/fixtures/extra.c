@@ -105,6 +105,12 @@ int llhttp__on_headers_complete(llparse_t* s, const char* p, const char* endp) {
   } else {
     llparse__print(p, endp, "invalid headers complete");
   }
+
+  if (s->flags & F_KEEP_ALIVE_TIMEOUT) {
+    llparse__print(
+        p, endp, "should_keep_alive=%d", llhttp_should_keep_alive(s));
+  }
+
   return 0;
 }
 

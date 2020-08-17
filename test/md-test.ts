@@ -254,6 +254,7 @@ run('request/content-length');
 run('request/transfer-encoding');
 run('request/invalid');
 run('request/finish');
+run('request/keep-alive');
 
 run('response/sample');
 run('response/connection');

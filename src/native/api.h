@@ -84,8 +84,9 @@ llhttp_errno_t llhttp_finish(llhttp_t* parser);
  */
 int llhttp_message_needs_eof(const llhttp_t* parser);
 
-/* Returns `1` if there might be any other messages following the last that was
- * successfully parsed.
+/* Returns `-1` or positive keep-alive timeout value (using incoming header
+ * `Keep-Alive: timeout=...`) if there might be any other messages following the
+ * last that was successfully parsed.
  */
 int llhttp_should_keep_alive(const llhttp_t* parser);
 
